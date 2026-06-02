@@ -723,8 +723,10 @@ function renderTotale(){
     if(n1===0&&n2===0) return;
     var card=document.createElement('div');
     card.className='payout-box';
-    var sumHtml=(n1>0&&n2>0)?'<div class="mp-row" style="padding:.5rem 1rem;border-top:1px solid var(--border);"><span class="mp-lbl">Totale entrambi i turni</span><span class="mp-val" style="color:var(--accent2);">&#8364; '+(pp1+pp2)+'</span></div>':'';
-    card.innerHTML='<div class="payout-header"><span class="payout-name">'+s.icon+' '+s.name+'</span></div><div style="padding:.5rem 1rem;display:flex;flex-direction:column;gap:.25rem;">'+(n1>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent1-dim);color:var(--shift1);border-radius:10px;padding:1px 7px;font-size:.6rem;">19&#8211;23</span> '+n1+' pers.</span><span class="mp-val">&#8364; '+pp1+'</span></div>':'')+(n2>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent2-dim);color:var(--shift2);border-radius:10px;padding:1px 7px;font-size:.6rem;">23&#8211;04</span> '+n2+' pers.</span><span class="mp-val">&#8364; '+pp2+'</span></div>':'')+'</div>'+sumHtml;
+    var sumPeople=(n1>0?n1:0)+(n2>0?n2:0);
+    var sumTotal=(n1>0?pp1*n1:0)+(n2>0?pp2*n2:0);
+    var sumHtml=(n1>0&&n2>0)?'<div class="mp-row" style="padding:.5rem 1rem;border-top:1px solid var(--border);"><span class="mp-lbl">Totale setor ('+sumPeople+' pers.)</span><span class="mp-val" style="color:var(--accent2);">&#8364; '+sumTotal+'</span></div>':'';
+    card.innerHTML='<div class="payout-header"><span class="payout-name">'+s.icon+' '+s.name+'</span><span style="font-family:Outfit,sans-serif;font-size:.75rem;color:var(--muted);">&#8364; '+c1.perQ+' / pers.</span></div><div style="padding:.5rem 1rem;display:flex;flex-direction:column;gap:.25rem;">'+(n1>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent1-dim);color:var(--shift1);border-radius:10px;padding:1px 7px;font-size:.6rem;">19&#8211;23</span> '+n1+' pers. × &#8364; '+pp1+'</span><span class="mp-val">&#8364; '+(pp1*n1)+'</span></div>':'')+(n2>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent2-dim);color:var(--shift2);border-radius:10px;padding:1px 7px;font-size:.6rem;">23&#8211;04</span> '+n2+' pers. × &#8364; '+pp2+'</span><span class="mp-val">&#8364; '+(pp2*n2)+'</span></div>':'')+'</div>'+sumHtml;
     container.appendChild(card);
   });
 }
