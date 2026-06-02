@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "terrazzaduomo21-mance-terrazza",
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+  }
+}
