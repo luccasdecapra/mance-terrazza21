@@ -71,7 +71,11 @@ input.tip-val::placeholder{color:var(--dim);}
 .sec-label{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;}
 
 /* SECTOR CARDS */
-.sectors{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;}
+.sectors{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem;}
+.sector-card.lavaggio{grid-column:1/-1;}
+.sector-card.sicurezza{grid-column:1/-1;}
+.sector-card.assenti-card{grid-column:1/-1;}
+@media(max-width:380px){.sectors{grid-template-columns:1fr;}}
 .sector-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;position:relative;overflow:hidden;}
 .sector-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
 .sector-card.normal::before{background:var(--accent2);}
@@ -274,26 +278,25 @@ input.tip-val::placeholder{color:var(--dim);}
         </div>
       </div>
       <div class="sec-label">Personale presente</div>
-      <div class="sectors" id="sectors-grid"></div>
-
-      <!-- ASSENTI -->
-      <div class="sector-card assenti" style="margin-bottom:1rem;">
-        <div class="sec-hdr">
-          <div class="sec-left">
-            <span class="sec-icon">&#128274;</span>
-            <span class="sec-name">Assenti con contratto</span>
+      <div class="sectors" id="sectors-grid">
+        <!-- assenti at bottom of grid, full width -->
+        <div class="sector-card assenti-card" style="grid-column:1/-1;">
+          <div class="sec-hdr">
+            <div class="sec-left">
+              <span class="sec-icon">&#128274;</span>
+              <span class="sec-name">Assenti con contratto</span>
+            </div>
+            <span class="sec-badge red">&#8594; Cassetta</span>
           </div>
-          <span class="sec-badge red">&#8594; Cassetta</span>
-        </div>
-        <div class="ctr-row">
-          <span class="ctr-lbl">Persone assenti che ricevono quota in cassetta</span>
-          <div class="ctr-grp">
-            <button class="ctr-btn" onclick="adjustAssenti(-1)">&#8722;</button>
-            <div class="ctr-val" id="cnt-assenti">0</div>
-            <button class="ctr-btn" onclick="adjustAssenti(1)">+</button>
+          <div class="ctr-row">
+            <span class="ctr-lbl">Persone assenti — quota va in cassetta</span>
+            <div class="ctr-grp">
+              <button class="ctr-btn" onclick="adjustAssenti(-1)">&#8722;</button>
+              <div class="ctr-val" id="cnt-assenti">0</div>
+              <button class="ctr-btn" onclick="adjustAssenti(1)">+</button>
+            </div>
           </div>
         </div>
-        <div class="assenti-note">La loro quota viene messa fisicamente in cassetta ogni sera.</div>
       </div>
 
       <div class="sec-label">Risultato turno</div>
@@ -302,7 +305,6 @@ input.tip-val::placeholder{color:var(--dim);}
         <div class="sum-stat"><div class="sv" id="res-pq">&#8364; 0</div><div class="sl">Per quota</div></div>
         <div class="sum-stat"><div class="sv" id="res-tip">&#8364; 0</div><div class="sl">Totale mance</div></div>
       </div>
-      <div class="payout-list" id="breakdown-list"></div>
       <div class="cass-box">
         <div class="cass-title">&#128274; Cassetta questa sera</div>
         <div class="cass-stats">
@@ -601,6 +603,8 @@ function adjustAssenti(delta){var c=state.shifts[state.currentShift].counts;c.as
 function buildGrid(){
   var grid=document.getElementById('sectors-grid');
   if(!grid)return;
+  // remove all sector cards but keep the assenti card (last child)
+  var assentiCard=grid.lastElementChild;
   grid.innerHTML='';
   var counts=state.shifts[state.currentShift].counts;
   SECTORS.forEach(function(s){
@@ -620,6 +624,10 @@ function buildGrid(){
     }
     grid.appendChild(card);
   });
+  // re-append assenti card and update its counter
+  grid.appendChild(assentiCard);
+  var assentiEl=document.getElementById('cnt-assenti');
+  if(assentiEl) assentiEl.textContent=counts.assenti||0;
 }
 
 function renderShift(){
@@ -627,19 +635,14 @@ function renderShift(){
   document.getElementById('res-q').textContent=fmtN(r.totalQ);
   document.getElementById('res-pq').innerHTML='&#8364; '+r.perQ;
   document.getElementById('res-tip').innerHTML='&#8364; '+r.tip;
-  var list=document.getElementById('breakdown-list');list.innerHTML='';
   var dist=0;
   SECTORS.forEach(function(s){
-    var n=0,sQ=0,sT=0,perAmt=0,detail='';
+    var n=0,sQ=0,sT=0;
     var c=r.counts[s.id];
-    if(s.special==='group'){n=c||0;if(n>0){sQ=s.quota;sT=sQ*r.perQ;perAmt=sT;}detail=n>0?'gruppo ('+n+' presenti)':'nessuno';}
-    else if(s.special==='sicurezza'){var nF=(c&&c.full)||0,nH=(c&&c.half)||0;n=nF+nH;sQ=nF+nH*0.5;sT=sQ*r.perQ;perAmt=sT;detail=n>0?nF+' intera + '+nH+' mezza':'nessuno';}
-    else{n=c||0;sQ=n*s.quota;sT=sQ*r.perQ;perAmt=n>0?sT/n:0;detail=n>0?n+' person'+(n>1?'e':''):'nessuno';}
+    if(s.special==='group'){n=c||0;if(n>0){sQ=s.quota;sT=sQ*r.perQ;}}
+    else if(s.special==='sicurezza'){var nF=(c&&c.full)||0,nH=(c&&c.half)||0;sQ=nF+nH*0.5;sT=sQ*r.perQ;}
+    else{n=c||0;sQ=n*s.quota;sT=sQ*r.perQ;}
     dist+=sT;
-    if(n===0)return;
-    var card=document.createElement('div');card.className='payout-card';
-    card.innerHTML='<div class="pc-head"><div class="pc-name">'+s.icon+' '+s.name+'<span style="font-size:.72rem;color:var(--muted);font-weight:400;">'+detail+'</span></div><div class="pc-total">&#8364; '+fmtN(perAmt)+'</div></div>';
-    list.appendChild(card);
   });
   document.getElementById('cass-assenti').innerHTML='&#8364; '+fmtN(r.assentiVal);
   document.getElementById('cass-arrot').innerHTML='&#8364; '+fmtN(r.arrotond);
