@@ -193,6 +193,24 @@ input.tip-val::placeholder{color:var(--dim);}
 .pin-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:700;padding:.8rem;cursor:pointer;touch-action:manipulation;transition:background .15s;}
 .pin-btn:active{background:var(--border-hi);}
 .pin-btn.pin-del{color:var(--muted);font-size:1rem;}
+
+/* Sector breakdown new layout */
+.tsc-body{padding:.6rem 1rem .75rem;}
+.tsc-sector-total{font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--green);}
+.tsc-shifts-block{display:flex;flex-direction:column;gap:.35rem;margin-bottom:.1rem;}
+.tsc-shift-row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;}
+.tsc-shift-info{font-size:.8rem;color:var(--muted);flex:1;}
+.tsc-shift-each{font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:600;color:var(--text);}
+.tsc-divider{height:1px;background:var(--border);margin:.5rem 0;}
+.tsc-earnings-block{display:flex;flex-direction:column;gap:.3rem;}
+.tsc-earn-row{display:flex;justify-content:space-between;align-items:center;padding:.25rem .5rem;border-radius:6px;background:var(--surface);}
+.tsc-earn-row.tsc-earn-both{background:linear-gradient(135deg,var(--accent2-dim),var(--total-dim));border:1px solid #2e3a50;}
+.tsc-earn-lbl{font-size:.75rem;color:var(--muted);}
+.tsc-earn-val{font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);}
+.tsc-earn-both-val{color:var(--total-c);font-size:1rem;}
+.tsc-total-row{display:flex;justify-content:space-between;align-items:center;}
+.tsc-total-val{font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;color:var(--accent2);}
+
 .per-person-banner{background:linear-gradient(135deg,#0d2a1a,#0a1f18);border:1px solid var(--green);border-radius:var(--r);padding:1rem 1.5rem;margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;}
 .ppb-block{text-align:center;}
 .ppb-val{font-family:'Outfit',sans-serif;font-size:1.5rem;font-weight:800;color:var(--green);}
@@ -707,26 +725,51 @@ function renderTotale(){
   container.innerHTML='<div class="results-header" style="margin-top:.5rem;">Per settore</div>';
 
   SECTORS.forEach(function(s){
-    var n1=0,n2=0,pp1=0,pp2=0;
+    var n1=0,n2=0,pp1=0,pp2=0,sectorTotal=0;
+
     if(s.special==='group'){
       n1=c1.counts[s.id]||0; n2=c2.counts[s.id]||0;
       pp1=n1>0?s.quota*c1.perQ:0; pp2=n2>0?s.quota*c2.perQ:0;
+      sectorTotal=(n1>0?pp1:0)+(n2>0?pp2:0);
     } else if(s.special==='sicurezza'){
       var sc1=c1.counts[s.id]||{full:0,half:0},sc2=c2.counts[s.id]||{full:0,half:0};
       n1=(sc1.full||0)+(sc1.half||0); n2=(sc2.full||0)+(sc2.half||0);
       pp1=((sc1.full||0)*1+(sc1.half||0)*0.5)*c1.perQ;
       pp2=((sc2.full||0)*1+(sc2.half||0)*0.5)*c2.perQ;
+      sectorTotal=(n1>0?pp1:0)+(n2>0?pp2:0);
     } else {
       n1=c1.counts[s.id]||0; n2=c2.counts[s.id]||0;
       pp1=n1>0?c1.perQ:0; pp2=n2>0?c2.perQ:0;
+      sectorTotal=(pp1*n1)+(pp2*n2);
     }
+
     if(n1===0&&n2===0) return;
+
     var card=document.createElement('div');
     card.className='payout-box';
-    var sumPeople=(n1>0?n1:0)+(n2>0?n2:0);
-    var sumTotal=(n1>0?pp1*n1:0)+(n2>0?pp2*n2:0);
-    var sumHtml=(n1>0&&n2>0)?'<div class="mp-row" style="padding:.5rem 1rem;border-top:1px solid var(--border);"><span class="mp-lbl">Totale setor ('+sumPeople+' pers.)</span><span class="mp-val" style="color:var(--accent2);">&#8364; '+sumTotal+'</span></div>':'';
-    card.innerHTML='<div class="payout-header"><span class="payout-name">'+s.icon+' '+s.name+'</span><span style="font-family:Outfit,sans-serif;font-size:.75rem;color:var(--muted);">&#8364; '+c1.perQ+' / pers.</span></div><div style="padding:.5rem 1rem;display:flex;flex-direction:column;gap:.25rem;">'+(n1>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent1-dim);color:var(--shift1);border-radius:10px;padding:1px 7px;font-size:.6rem;">19&#8211;23</span> '+n1+' pers. × &#8364; '+pp1+'</span><span class="mp-val">&#8364; '+(pp1*n1)+'</span></div>':'')+(n2>0?'<div class="mp-row"><span class="mp-lbl"><span style="background:var(--accent2-dim);color:var(--shift2);border-radius:10px;padding:1px 7px;font-size:.6rem;">23&#8211;04</span> '+n2+' pers. × &#8364; '+pp2+'</span><span class="mp-val">&#8364; '+(pp2*n2)+'</span></div>':'')+'</div>'+sumHtml;
+
+    // shift rows
+    var shiftRows='';
+    if(n1>0) shiftRows+='<div class="tsc-shift-row"><span class="shift-pill s1">19&#8211;23</span><span class="tsc-shift-info">'+n1+' pers.</span><span class="tsc-shift-each">&#8364; '+pp1+' cad.</span></div>';
+    if(n2>0) shiftRows+='<div class="tsc-shift-row"><span class="shift-pill s2">23&#8211;04</span><span class="tsc-shift-info">'+n2+' pers.</span><span class="tsc-shift-each">&#8364; '+pp2+' cad.</span></div>';
+
+    // earnings summary by worker type
+    var earningsRows='';
+    if(n1>0&&n2>0){
+      earningsRows+='<div class="tsc-earn-row"><span class="tsc-earn-lbl">Solo 19&#8211;23</span><span class="tsc-earn-val">&#8364; '+pp1+'</span></div>';
+      earningsRows+='<div class="tsc-earn-row"><span class="tsc-earn-lbl">Solo 23&#8211;04</span><span class="tsc-earn-val">&#8364; '+pp2+'</span></div>';
+      earningsRows+='<div class="tsc-earn-row tsc-earn-both"><span class="tsc-earn-lbl">&#9733; Entrambi i turni</span><span class="tsc-earn-val tsc-earn-both-val">&#8364; '+(pp1+pp2)+'</span></div>';
+    }
+
+    var totalPeople = (n1>0?n1:0)+(n2>0?n2:0);
+    card.innerHTML=
+      '<div class="payout-header"><span class="payout-name">'+s.icon+' '+s.name+'</span><span class="tsc-sector-total">&#8364; '+sectorTotal+'</span></div>'+
+      '<div class="tsc-body">'+
+        '<div class="tsc-shifts-block">'+shiftRows+'</div>'+
+        (earningsRows?'<div class="tsc-divider"></div><div class="tsc-earnings-block">'+earningsRows+'</div>':'')+
+        '<div class="tsc-divider"></div>'+
+        '<div class="tsc-total-row"><span style="font-size:.7rem;color:var(--muted);">Totale settore ('+totalPeople+' pers.)</span><span class="tsc-total-val">&#8364; '+sectorTotal+'</span></div>'+
+      '</div>';
     container.appendChild(card);
   });
 }
